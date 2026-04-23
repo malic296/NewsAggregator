@@ -71,10 +71,10 @@ app = FastAPI(debug=(settings.config.environment == "dev"), generate_unique_id_f
 
 # MIDDLEWARES
 #app.add_middleware(HTTPSRedirectMiddleware)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "api", "nginx"])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.config.environment == "dev" else ["https://production.com"],
+    allow_origins=["*"] if settings.config.environment == "dev" else ["https://production.com", "localhost"],
     allow_methods=["GET", "POST"]
 )
 
