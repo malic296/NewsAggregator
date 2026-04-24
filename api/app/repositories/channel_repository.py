@@ -19,7 +19,7 @@ class ChannelRepository(BaseRepository, ChannelInterface):
         """
         params = (user_id, )
         db_result = self._execute(query=query, params=params)
-        if not db_result.success or not db_result.data:
+        if not db_result.success:
             raise DatabaseError(
                 message=db_result.error_message if db_result.error_message else "Unknown error",
                 method="get_channels"
