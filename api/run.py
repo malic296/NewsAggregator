@@ -16,7 +16,7 @@ from app.core.logger.handlers import DatabaseHandler, DropOnFailHandler
 import logging
 from app.core.errors import AppError
 from app.core.logger import setup_logging
-#test 5
+#test 6
 
 setup_logging()
 settings = Settings()
