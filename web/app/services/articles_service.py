@@ -16,7 +16,7 @@ class ArticlesService(BaseService):
 
         self._handle_response(response)
 
-        return response.parsed.articles
+        return response.parsed.articles if response.parsed.articles else []
 
     def read_article(self, uuid: str) -> Optional[ArticleDTO]:
         response = article.sync_detailed(

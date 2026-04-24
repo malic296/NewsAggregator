@@ -14,7 +14,7 @@ class ChannelsService(BaseService):
 
         self._handle_response(response)
 
-        return response.parsed.channels
+        return response.parsed.channels if response.parsed.channels else []
 
     def set_disabled_channels(self, channels_to_disable: list[ChannelDTO]) -> None:
         response = disabled.sync_detailed(

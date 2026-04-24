@@ -33,6 +33,10 @@ services:
       dockerfile: api/Dockerfile
     image: malic466/news-api
     restart: unless-stopped
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.update-news.schedule: "@every 30m"
+      ofelia.job-exec.update-news.command: "python update.py"
     env_file:
       - .env
     depends_on:
@@ -87,15 +91,12 @@ services:
 
   scheduler:
     image: mcuadros/ofelia:latest
+    restart: unless-stopped
     depends_on:
       - api
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: daemon --docker
-    labels:
-      ofelia.job-exec.update-news.schedule: "@every 30m"
-      ofelia.job-exec.update-news.container: "news-aggregator_api_1"
-      ofelia.job-exec.update-news.command: "python update.py"
 
 volumes:
   pgdata:
