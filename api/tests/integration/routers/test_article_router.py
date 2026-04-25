@@ -15,6 +15,7 @@ def test_get_articles(test_client, mock_services, consumer):
             channel_link="CHANNEL_LINK_1",
             likes=1,
             liked_by_user=False,
+            channel_logo="https://example.com/logo.png"
         )
     ]
 
@@ -40,6 +41,7 @@ def test_get_single_article(test_client, mock_services):
         channel_link="CHANNEL_LINK_1",
         likes=1,
         liked_by_user=False,
+        channel_logo="https://example.com/logo.png"
     )
     mock_services.article_service.get_article.return_value = article
 

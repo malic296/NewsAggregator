@@ -33,10 +33,17 @@ def test_provided_code_correct(mocked_redis, cache_service):
 
 def test_set_and_get_available_channels(mocked_redis, cache_service):
     channels = [
-        Channel(id=1, uuid="channel-uuid", title="Channel", link="https://example.com/feed", disabled_by_user=False)
+        Channel(
+            id=1,
+            uuid="channel-uuid",
+            title="Channel",
+            link="https://example.com/feed",
+            disabled_by_user=False,
+            logo_url="https://example.com/logo.png"
+        )
     ]
     mocked_redis.get.return_value = (
-        '[{"id": 1, "uuid": "channel-uuid", "title": "Channel", "link": "https://example.com/feed",'
+        '[{"id": 1, "uuid": "channel-uuid", "title": "Channel", "link": "https://example.com/feed", "logo_url": "https://example.com/logo.png", '
         ' "disabled_by_user": false}]'
     )
 
@@ -51,7 +58,8 @@ def test_set_and_get_article(mocked_redis, cache_service, article):
     mocked_redis.get.return_value = (
         '{"id": 1, "uuid": "article-uuid", "title": "Title", "link": "https://example.com/article",'
         ' "description": "Description", "pub_date": "2024-01-01T00:00:00+00:00",'
-        ' "channel_link": "https://example.com/feed", "likes": 2, "liked_by_user": true}'
+        ' "channel_link": "https://example.com/feed", "likes": 2, "liked_by_user": true,'
+        ' "channel_logo": "https://example.com/logo.png"}'
     )
 
     cache_service.set_article(article)

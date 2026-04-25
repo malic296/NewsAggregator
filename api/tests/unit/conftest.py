@@ -26,6 +26,7 @@ def article() -> Article:
         channel_link="https://example.com/feed",
         likes=2,
         liked_by_user=True,
+        channel_logo="https://example.com/logo.png"
     )
 
 
@@ -37,6 +38,7 @@ def channel() -> Channel:
         title="Channel",
         link="https://example.com/feed",
         disabled_by_user=False,
+        logo_url="https://example.com/logo.png"
     )
 
 

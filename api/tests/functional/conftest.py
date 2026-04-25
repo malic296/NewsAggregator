@@ -27,6 +27,7 @@ def functional_services(mocker, consumer: Consumer):
         channel_link="https://example.com/feed",
         likes=0,
         liked_by_user=False,
+        channel_logo="https://example.com/logo.png"
     )
     channel = Channel(
         id=1,
@@ -34,6 +35,8 @@ def functional_services(mocker, consumer: Consumer):
         title="Channel",
         link="https://example.com/feed",
         disabled_by_user=False,
+        logo_url="https://example.com/logo.png",
+        feed_url="https://example.com/feed.xml"
     )
 
     container = ServiceContainer(

@@ -16,6 +16,7 @@ def test_disable_channels(test_client, mock_services, consumer):
             "title": "Channel",
             "link": "https://example.com/feed",
             "disabled_by_user": True,
+            "logo_url": "https://example.com/logo.png"
         }
     ]
 
