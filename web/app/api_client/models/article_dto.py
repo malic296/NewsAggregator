@@ -24,6 +24,7 @@ class ArticleDTO:
         pub_date (datetime.datetime):
         channel_link (str):
         likes (int):
+        channel_logo (str):
         liked_by_user (bool | Unset):  Default: False.
     """
 
@@ -34,6 +35,7 @@ class ArticleDTO:
     pub_date: datetime.datetime
     channel_link: str
     likes: int
+    channel_logo: str
     liked_by_user: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -52,6 +54,8 @@ class ArticleDTO:
 
         likes = self.likes
 
+        channel_logo = self.channel_logo
+
         liked_by_user = self.liked_by_user
 
         field_dict: dict[str, Any] = {}
@@ -65,6 +69,7 @@ class ArticleDTO:
                 "pub_date": pub_date,
                 "channel_link": channel_link,
                 "likes": likes,
+                "channel_logo": channel_logo,
             }
         )
         if liked_by_user is not UNSET:
@@ -89,6 +94,8 @@ class ArticleDTO:
 
         likes = d.pop("likes")
 
+        channel_logo = d.pop("channel_logo")
+
         liked_by_user = d.pop("liked_by_user", UNSET)
 
         article_dto = cls(
@@ -99,6 +106,7 @@ class ArticleDTO:
             pub_date=pub_date,
             channel_link=channel_link,
             likes=likes,
+            channel_logo=channel_logo,
             liked_by_user=liked_by_user,
         )
 

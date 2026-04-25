@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 import xml.etree.ElementTree as ET
 from app.models.article import Article
-from typing import List
+from typing import Optional
 from datetime import datetime, timezone
 from dateutil import parser
+from app.models.scraped_data import ScrapedChannel
+
 
 class FeedParser(ABC):
     @abstractmethod
@@ -11,7 +13,7 @@ class FeedParser(ABC):
         pass
 
     @abstractmethod
-    def parse(self, root: ET.Element, hours: int = 1) -> List[Article]:
+    def parse(self, root: ET.Element, hours: int = 1) -> Optional[ScrapedChannel]:
         pass
 
     @staticmethod

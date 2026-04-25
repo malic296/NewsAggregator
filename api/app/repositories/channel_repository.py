@@ -9,7 +9,7 @@ from app.interfaces import ChannelInterface
 class ChannelRepository(BaseRepository, ChannelInterface):
     def get_channels(self, user_id: int) -> list[Channel]:
         query = """
-            SELECT id, uuid, title, link, 
+            SELECT id, uuid, title, link, logo_url, feed_url, 
             EXISTS(
                 SELECT 1 
                 FROM disabled 
@@ -54,13 +54,14 @@ class ChannelRepository(BaseRepository, ChannelInterface):
 
         for channel in channels:
             channel_sql = """
-                INSERT INTO channel (title, link, uuid)
-                VALUES (%s, %s, %s) ON CONFLICT (link) DO 
-                UPDATE 
+                INSERT INTO channel (title, link, uuid, logo_url, feed_url)
+                VALUES (%s, %s, %s, %s, %s) 
+                ON CONFLICT (COALESCE(feed_url, link)) 
+                DO UPDATE 
                 SET title = EXCLUDED.title 
                 RETURNING id; 
             """
-            channel_params = (channel.title, channel.link, str(uuid.uuid4()))
+            channel_params = (channel.title, channel.link, str(uuid.uuid4()), channel.logo_url, channel.feed_url)
 
             channel_result = self._execute(channel_sql, channel_params)
 

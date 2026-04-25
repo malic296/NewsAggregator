@@ -10,7 +10,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
         query = """
                 SELECT 
                     a.id, a.uuid, a.title, a.description, a.link, a.pub_date, 
-                    c.link AS channel_link, 
+                    c.link AS channel_link, c.logo_url AS channel_logo, 
                     COUNT(l.id) as likes,
                     EXISTS (
                         SELECT 1 FROM likes 
@@ -23,7 +23,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
                   AND a.channel_id NOT IN (
                       SELECT channel_id FROM disabled WHERE consumer_id = %s
                   )
-                GROUP BY a.id, c.link 
+                GROUP BY a.id, c.link, c.logo_url
                 ORDER BY a.pub_date DESC
             """
 

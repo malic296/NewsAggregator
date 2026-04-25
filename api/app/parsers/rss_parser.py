@@ -5,26 +5,38 @@ from datetime import datetime, timedelta, timezone
 from app.models.scraped_data import ScrapedChannel
 from app.models import Channel, Article
 import uuid
+import logging
+from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 class RSSParser(FeedParser):
     def can_parse(self, root: ET.Element) -> bool:
         return root.tag == "rss"
 
-    def parse(self, root: ET.Element, hours: int = 1) -> ScrapedChannel:
+    def parse(self, root: ET.Element, hours: int = 1) -> Optional[ScrapedChannel]:
         channel = root.find("channel")
         if channel is None:
             raise ScrapingError(f"Channel tag not found for: {root}")
 
         channel_title = channel.findtext("title", default=None)
         channel_link = channel.findtext("link", default=None)
+        channel_logo = channel.findtext("image/url", default=None)
 
-        if not channel_link or not channel_link:
-            raise ScrapingError("RSS header is missing required title or link.")
+        atom_ns = {"atom": "http://www.w3.org/2005/Atom"}
+        atom_link_elem = channel.find("atom:link[@rel='self']", atom_ns)
+        feed_url = atom_link_elem.attrib.get("href") if atom_link_elem is not None else None
+
+        if not channel_link or not channel_link or not channel_logo:
+            logger.info(f"RSS parser failed to parse the RSS feed because (title, link, logo): {channel_title}, {channel_link}, {channel_logo}")
+            return None
 
         result = ScrapedChannel(
             title=channel_title.strip(),
             link=channel_link.strip(),
+            feed_url=feed_url,
             uuid=str(uuid.uuid4()),
+            logo_url=channel_logo.strip(),
             articles=[]
         )
 

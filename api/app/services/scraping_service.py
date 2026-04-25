@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from app.models.scraped_data import ScrapedChannel
 import xml.etree.ElementTree as ET
@@ -6,6 +7,9 @@ from httpx import AsyncClient
 from asyncio import Semaphore
 import asyncio
 from app.parsers import AtomParser, RSSParser
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ScrapingService:
     def __init__(self, client: AsyncClient):
@@ -17,24 +21,26 @@ class ScrapingService:
         tasks = [self._read_data_from_url(feed, hours) for feed in feeds]
         channels = await asyncio.gather(*tasks)
 
-        return channels
+        return [channel for channel in channels if channel is not None]
 
     async def _read_data_from_url(self, link: str, hours: int = 1) -> ScrapedChannel:
         async with self._semaphore:
             try:
                 content = await self._get_content_from_url(link)
-            except ScrapingError:
-                raise
+            except ScrapingError as e:
+                logger.error(str(e))
+                return None
 
-            xml = ET.fromstring(content)
+            try:
+                xml = ET.fromstring(content)
+            except ET.ParseError as e:
+                logger.error(f"Failed to parse XML for {link}: {e}")
+                return None
 
             channel = None
             for parser in self.parsers:
                 if parser.can_parse(xml):
                     channel = parser.parse(xml, hours)
-
-            if not channel:
-                raise ScrapingError(f"Could not parse {link}.")
 
             return channel
 

@@ -9,5 +9,6 @@ class ArticleDTO(BaseModel):
     pub_date: datetime
     channel_link: str
     likes: int
+    channel_logo: str
     liked_by_user: bool = False
 

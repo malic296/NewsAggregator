@@ -1,11 +1,25 @@
 environment: "dev"
 update_interval: 72
 feeds:
-  - https://www.ceskenoviny.cz/sluzby/rss/zpravy.php
-  - https://www.pbj.cz/feed
-  - https://www.blesk.cz/rss
-  - https://servis.idnes.cz/rss.aspx
-  - https://servis.lidovky.cz/rss.aspx
   - https://ct24.ceskatelevize.cz/rss/tema/vyber-redakce-84313
+  - https://sport.ceskatelevize.cz/rss
+  - https://ct24.ceskatelevize.cz/rss/rubrika/regiony/jihomoravsky-kraj-26
+  - https://ct24.ceskatelevize.cz/rss/rubrika/regiony/moravskoslezsky-kraj-14
   - https://ct24.ceskatelevize.cz/rss/slezsko
-  - https://ct24.ceskatelevize.cz/rss/morava
+  - https://ct24.ceskatelevize.cz/rss
+  - https://servis.idnes.cz/rss.aspx?c=technet
+  - https://servis.idnes.cz/rss.aspx?c=zdravih
+  - https://servis.idnes.cz/rss.aspx?c=fincentrum
+  - https://servis.idnes.cz/rss.aspx?c=autokat
+  - https://isport.blesk.cz//rss/56
+  - https://isport.blesk.cz//rss/55
+  - https://isport.blesk.cz//rss/75
+  - https://isport.blesk.cz//rss/174
+  - https://isport.blesk.cz//rss/203
+  - https://prozeny.blesk.cz/rss
+  - https://feeds.feedburner.com/Promuze
+  - http://feeds.feedburner.com/DenikSport
+  - https://www.aktualne.cz/rss/magazin?lp=1
+  - https://www.czechjournal.cz/feed/
+  - https://www.ceskenoviny.cz/sluzby/rss/zpravy.php
+  - https://servis.lidovky.cz/rss.aspx

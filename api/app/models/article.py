@@ -11,5 +11,6 @@ class Article:
     pub_date: datetime
     channel_link: str
     likes: int
+    channel_logo: Optional[str] = None
     liked_by_user: bool = False
     id: Optional[int] = None
