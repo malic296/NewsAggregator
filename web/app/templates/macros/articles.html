@@ -26,16 +26,15 @@
                     <a href="{{ article.channel_link}}" target="_blank" >
                         <div class="is-flex is-align-items-center mb-1">
                             {% if article.channel_logo %}
-                                <figure class="image mr-2 is-flex is-justify-content-center is-align-items-center" style="width: 80px; height: 80px;">
-                                    <span class="icon is-large mr-2 has-text-primary" id="fallback-icon-{{ article.uuid }}" style="display: none;">
-                                        <i class="fas fa-rss-square fa-3x"></i>
-                                    </span>
-
+                                <figure class="image mr-2 is-flex is-justify-content-center is-align-items-center" style="width: 25px; height: 25px; min-width: 25px; flex-shrink: 0;">
                                     <img src="{{ article.channel_logo }}"
                                          alt="Logo"
-                                         class="channel-logo"
-                                         style="width: 100%; height: 100%; object-fit: contain;">
+                                         class="channel-logo">
                                 </figure>
+                            {% else %}
+                                <span class="icon is-large mr-2 has-text-primary" id="fallback-icon-{{ article.uuid }}" style="display: none; flex-shrink: 0;">
+                                    <i class="fas fa-rss-square fa-2x"></i>
+                                </span>
                             {% endif %}
 
                             <span class="tag is-dark is-rounded is-small mr-2 has-text-primary">

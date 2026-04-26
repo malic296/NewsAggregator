@@ -17,19 +17,3 @@ function syncToggle(checkbox, uuid) {
         text.innerText = 'Aktivní';
     }
 }
-
-document.addEventListener('error', (event) => {
-    if (event.target.classList.contains('channel-logo')) {
-        const img = event.target;
-        const figure = img.closest('figure');
-
-        if (figure) {
-            img.style.display = 'none';
-
-            const iconSpan = figure.querySelector('.icon');
-            if (iconSpan) {
-                iconSpan.style.display = 'flex';
-            }
-        }
-    }
-}, true);
