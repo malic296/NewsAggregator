@@ -26,6 +26,7 @@ jobs:
           VALKEY_DB=${{ secrets.VALKEY_DB }}
           RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
+          ELASTIC_SEARCH_CONN=${{ secrets.ELASTIC_SEARCH_CONN }}
           SECRET_KEY=${{ secrets.SECRET_KEY }}
           API_URL=${{ secrets.API_URL }}
           FE_ENV=prod
