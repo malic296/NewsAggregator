@@ -2,7 +2,7 @@ from flask import Flask
 from config import configs
 from web.dependencies.error_handler import register_error_handlers
 
-def create_web(config_key):
+def create_app(config_key):
     web = Flask(__name__)
     web.config.from_object(configs[config_key])
 
