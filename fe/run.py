@@ -1,8 +1,8 @@
-from web import create_app
+from web import create_web
 import os
 
 env = os.environ.get("FE_ENV", "dev")
-app = create_app(env)
+web = create_web(env)
 
 if __name__ == "__main__":
-    app.run()
+    web.run()

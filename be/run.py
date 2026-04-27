@@ -23,7 +23,7 @@ setup_logging()
 settings = Settings()
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(api: FastAPI):
     # UTILS
     db_pool = create_connection_pool(settings)
     valkey_client = create_valkey_client(settings)
@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
     logging.getLogger(__name__).info("API started.")
 
     # DEPENDENCY CONTAINER
-    app.state.services = ServiceContainer(
+    api.state.services = ServiceContainer(
         article_service=article_service,
         channel_service=channel_service,
         consumer_service=consumer_service,
@@ -73,25 +73,25 @@ async def lifespan(app: FastAPI):
     db_pool.close()
 
 # APP
-app = FastAPI(debug=(settings.config.environment == "dev"), generate_unique_id_function=generate_unique_endpoint_id, lifespan=lifespan)
+api = FastAPI(debug=(settings.config.environment == "dev"), generate_unique_id_function=generate_unique_endpoint_id, lifespan=lifespan)
 
 # MIDDLEWARES
 #api.add_middleware(HTTPSRedirectMiddleware)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "be", "nginx"])
-app.add_middleware(
+api.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "be", "nginx"])
+api.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if settings.config.environment == "dev" else ["https://production.com", "localhost"],
     allow_methods=["GET", "POST"]
 )
 
-@app.middleware("http")
+@api.middleware("http")
 async def manage_request_middleware(request: Request, call_next):
     return await manage_request(request, call_next)
 
 # EXCEPTION HANDLERS
-app.add_exception_handler(Exception, unexpected_exception_handler)
-app.add_exception_handler(AppError, internal_exception_handler)
-app.add_exception_handler(HTTPException, http_exception_handler)
+api.add_exception_handler(Exception, unexpected_exception_handler)
+api.add_exception_handler(AppError, internal_exception_handler)
+api.add_exception_handler(HTTPException, http_exception_handler)
 
 # ROUTERS
-app.include_router(v1_router)
+api.include_router(v1_router)
