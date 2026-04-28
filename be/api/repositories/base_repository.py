@@ -57,10 +57,25 @@ class BaseRepository:
                 error_message=str(e)
             )
 
-    @staticmethod
-    def encode_cursor() -> str:
-        pass
+    def _execute_transaction_returning(self, inputs: list[tuple[str, Optional[tuple]]]) -> DBResult:
+        try:
+            all_rows = []
+            with self._pool.connection() as conn:
+                with conn.cursor(row_factory=dict_row) as cur:
+                    for input in inputs:
+                        cur.execute(input[0], input[1] or ())
+                        if cur.description:
+                            rows = cur.fetchall()
+                            all_rows.extend(rows)
 
-    @staticmethod
-    def decode_cursor() -> str:
-        pass
+            return DBResult(
+                success=True,
+                data=all_rows,
+                row_count=len(all_rows)
+            )
+
+        except Exception as e:
+            return DBResult(
+                success = False,
+                error_message=str(e)
+            )

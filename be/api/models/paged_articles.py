@@ -5,4 +5,5 @@ from .article import Article
 class PagedArticles:
     articles: list[Article]
     next_cursor: str | None = None
+    next_page: int | None = None
     has_more: bool = False

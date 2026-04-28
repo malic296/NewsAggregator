@@ -18,3 +18,7 @@ class ArticleInterface(ABC):
     @abstractmethod
     def like_article(self, article_id: int, consumer_id: int) -> bool:
         ...
+
+    @abstractmethod
+    def get_articles_by_ids(self, consumer: Consumer, ids: list[int]) -> list[Article]:
+        ...

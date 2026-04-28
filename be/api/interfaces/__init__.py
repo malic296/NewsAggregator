@@ -1,3 +1,4 @@
 from .article_interface import ArticleInterface
 from .channel_interface import ChannelInterface
 from .consumer_interface import ConsumerInterface
+from .elastic_search_interface import ElasticSearchInterface

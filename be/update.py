@@ -2,13 +2,12 @@ from httpx import AsyncClient
 import asyncio
 from api.core.errors import AppError
 from api.core.settings import Settings
-from api.core.database import create_connection_pool, create_valkey_client
+from api.core.clients import create_connection_pool, create_valkey_client, create_elastic_search_client
 from api.services.channel_service import ChannelService
 from api.services.scraping_service import ScrapingService
 from api.services import CacheService
-from api.repositories.channel_repository import ChannelRepository
 from api.core.logger.handlers import DropOnFailHandler, DatabaseHandler
-from api.repositories import LoggingRepository
+from api.repositories import LoggingRepository, ChannelRepository, ElasticSearchRepository
 import logging
 from api.core.logger import setup_logging
 
@@ -16,6 +15,7 @@ async def main() -> None:
     setup_logging()
     settings: Settings = Settings()
     db_pool = create_connection_pool(settings)
+    es_client = create_elastic_search_client(settings)
     logging_repo = LoggingRepository(connection_pool=db_pool)
     db_handler = DatabaseHandler(writer_func=logging_repo.log_to_db)
     db_wrapper = DropOnFailHandler(db_handler)
@@ -30,7 +30,8 @@ async def main() -> None:
             channel_service = ChannelService(
                 channels=ChannelRepository(connection_pool=db_pool),
                 cache=CacheService(create_valkey_client(settings)),
-                scraping_service=scraping_service
+                scraping_service=scraping_service,
+                elasticsearch=ElasticSearchRepository(es_client)
             )
             logger.info("Dependencies loaded.")
 

@@ -105,6 +105,14 @@ class DatabaseError(AppError):
             public_message="Server failed because of internal error. Try again later."
         )
 
+class ElasticSearchError(AppError):
+    def __init__(self, message: str, method: str):
+        super().__init__(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            internal_message=f"Elastic search failed during method: {method}. Error message: {message}",
+            public_message="Server failed because of internal error. Try again later."
+        )
+
 class RateLimitExceededError(AppError):
     def __init__(self):
         super().__init__(

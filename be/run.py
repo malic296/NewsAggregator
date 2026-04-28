@@ -8,12 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.api.v1 import v1_router
 from api.api.dependencies import generate_unique_endpoint_id
 from api.core.container import ServiceContainer
-from api.repositories import ArticleRepository, ChannelRepository, ConsumerRepository, LoggingRepository
+from api.repositories import ArticleRepository, ChannelRepository, ConsumerRepository, LoggingRepository, \
+    ElasticSearchRepository
 from api.services import CacheService, SecurityService, EmailService, ArticleService, ChannelService, ConsumerService
 from api.core.settings import Settings
 from api.core.middlewares import manage_request
 from api.handlers.exception_handlers import internal_exception_handler, http_exception_handler, unexpected_exception_handler
-from api.core.database import create_connection_pool, create_elastic_search_client, create_valkey_client
+from api.core.clients import create_connection_pool, create_elastic_search_client, create_valkey_client
 from api.core.logger.handlers import DatabaseHandler, DropOnFailHandler
 import logging
 from api.core.errors import AppError
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
     channel_repository = ChannelRepository(connection_pool=db_pool)
     consumer_repository = ConsumerRepository(connection_pool=db_pool)
     logging_repository = LoggingRepository(connection_pool=db_pool)
+    elastic_search_repository = ElasticSearchRepository(client=elastic_search_client)
 
     # UTIL SERVICES
     cache = CacheService(client=valkey_client)
@@ -41,8 +43,8 @@ async def lifespan(app: FastAPI):
     email = EmailService(resend_key=settings.resend_key)
 
     # CORE SERVICES
-    article_service = ArticleService(articles=article_repository, cache=cache, es_client=elastic_search_client)
-    channel_service = ChannelService(channels=channel_repository, cache=cache, scraping_service=None)
+    article_service = ArticleService(articles=article_repository, cache=cache, elasticsearch=elastic_search_repository, channels=channel_repository)
+    channel_service = ChannelService(channels=channel_repository, cache=cache, scraping_service=None, elasticsearch=elastic_search_client)
     consumer_service = ConsumerService(
         consumers=consumer_repository,
         cache=cache,
@@ -76,7 +78,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(debug=(settings.config.environment == "dev"), generate_unique_id_function=generate_unique_endpoint_id, lifespan=lifespan)
 
 # MIDDLEWARES
-#api.add_middleware(HTTPSRedirectMiddleware)
+#app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "be", "be:8000", "nginx"])
 app.add_middleware(
     CORSMiddleware,

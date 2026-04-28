@@ -21,7 +21,9 @@ def create_connection_pool(settings: Settings) -> ConnectionPool:
 
 def create_elastic_search_client(settings: Settings):
     try:
-        return Elasticsearch(settings.elastic_search_conn)
+        client = Elasticsearch(settings.elastic_search_conn)
+        client.ping()
+        return client
     except Exception as e:
         raise DependencyUnavailableError(dependency="ElasticSearch")
 

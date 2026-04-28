@@ -1,2 +1,2 @@
 [tool.fastapi]
-entrypoint = "run:api"
+entrypoint = "run:app"

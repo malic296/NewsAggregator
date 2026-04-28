@@ -81,6 +81,42 @@ class ArticleRepository(BaseRepository, ArticleInterface):
         except Exception as e:
             raise MappingError(mapping_error=str(e), method="get_articles")
 
+    def get_articles_by_ids(self, consumer: Consumer, ids: list[int]) -> list[Article]:
+        if not ids:
+            return []
+
+        placeholders = ",".join(["%s"] * len(ids))
+
+        query = f"""
+            SELECT 
+                a.id, a.uuid, a.title, a.description, a.link, a.pub_date,
+                c.link      AS channel_link,
+                c.logo_url  AS channel_logo, 
+                COUNT(l.id) AS likes,
+                EXISTS(
+                    SELECT 1 FROM likes
+                    WHERE article_id = a.id AND consumer_id = %s
+                ) AS liked_by_user
+            FROM article AS a 
+            JOIN channel AS c on c.id = a.channel_id
+            LEFT JOIN likes as l ON a.id = l.article_id
+            WHERE a.id IN ({placeholders})
+            GROUP BY a.id, c.link, c.logo_url
+        """
+
+        result = self._execute(query, (consumer.id, *ids))
+
+        if not result.success:
+            raise DatabaseError(
+                message=result.error_message if result.error_message else "Unknown error",
+                method="get_articles_by_ids"
+            )
+
+        try:
+            return [Article(**row) for row in (result.data if result.data else [])]
+        except Exception as e:
+            raise MappingError(mapping_error=str(e), method="get_articles_by_ids")
+
     def get_article(self, uuid: str) -> Optional[Article]:
         query = """
             SELECT 
