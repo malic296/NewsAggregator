@@ -8,13 +8,14 @@ class ArticlesService(BaseService):
     def __init__(self, client: AuthenticatedClient):
         self.client = client
 
-    def read_articles(self, hours: int = 1, order_by_likes: bool = True, cursor: Optional[str] = None, query: Optional[str] = None) -> PagedArticlesDTO:
+    def read_articles(self, hours: int = 1, order_by_likes: bool = True, cursor: Optional[str] = None, page: Optional[int] = None, query: Optional[str] = None) -> PagedArticlesDTO:
         response = articles.sync_detailed(
             client=self.client,
             hours=hours,
             order_by_likes=order_by_likes,
             cursor=cursor,
-            query=query
+            query=query,
+            page=page
         )
 
         self._handle_response(response)

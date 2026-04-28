@@ -15,6 +15,7 @@ def _get_kwargs(
     hours: int | Unset = 1,
     order_by_likes: bool | Unset = True,
     cursor: None | str | Unset = UNSET,
+    page: int | None | Unset = UNSET,
     query: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
@@ -30,6 +31,13 @@ def _get_kwargs(
     else:
         json_cursor = cursor
     params["cursor"] = json_cursor
+
+    json_page: int | None | Unset
+    if isinstance(page, Unset):
+        json_page = UNSET
+    else:
+        json_page = page
+    params["page"] = json_page
 
     json_query: None | str | Unset
     if isinstance(query, Unset):
@@ -85,6 +93,7 @@ def sync_detailed(
     hours: int | Unset = 1,
     order_by_likes: bool | Unset = True,
     cursor: None | str | Unset = UNSET,
+    page: int | None | Unset = UNSET,
     query: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PagedArticlesDTO]:
     """Articles
@@ -93,6 +102,7 @@ def sync_detailed(
         hours (int | Unset):  Default: 1.
         order_by_likes (bool | Unset):  Default: True.
         cursor (None | str | Unset):
+        page (int | None | Unset):
         query (None | str | Unset):
 
     Raises:
@@ -107,6 +117,7 @@ def sync_detailed(
         hours=hours,
         order_by_likes=order_by_likes,
         cursor=cursor,
+        page=page,
         query=query,
     )
 
@@ -123,6 +134,7 @@ def sync(
     hours: int | Unset = 1,
     order_by_likes: bool | Unset = True,
     cursor: None | str | Unset = UNSET,
+    page: int | None | Unset = UNSET,
     query: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PagedArticlesDTO | None:
     """Articles
@@ -131,6 +143,7 @@ def sync(
         hours (int | Unset):  Default: 1.
         order_by_likes (bool | Unset):  Default: True.
         cursor (None | str | Unset):
+        page (int | None | Unset):
         query (None | str | Unset):
 
     Raises:
@@ -146,6 +159,7 @@ def sync(
         hours=hours,
         order_by_likes=order_by_likes,
         cursor=cursor,
+        page=page,
         query=query,
     ).parsed
 
@@ -156,6 +170,7 @@ async def asyncio_detailed(
     hours: int | Unset = 1,
     order_by_likes: bool | Unset = True,
     cursor: None | str | Unset = UNSET,
+    page: int | None | Unset = UNSET,
     query: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PagedArticlesDTO]:
     """Articles
@@ -164,6 +179,7 @@ async def asyncio_detailed(
         hours (int | Unset):  Default: 1.
         order_by_likes (bool | Unset):  Default: True.
         cursor (None | str | Unset):
+        page (int | None | Unset):
         query (None | str | Unset):
 
     Raises:
@@ -178,6 +194,7 @@ async def asyncio_detailed(
         hours=hours,
         order_by_likes=order_by_likes,
         cursor=cursor,
+        page=page,
         query=query,
     )
 
@@ -192,6 +209,7 @@ async def asyncio(
     hours: int | Unset = 1,
     order_by_likes: bool | Unset = True,
     cursor: None | str | Unset = UNSET,
+    page: int | None | Unset = UNSET,
     query: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PagedArticlesDTO | None:
     """Articles
@@ -200,6 +218,7 @@ async def asyncio(
         hours (int | Unset):  Default: 1.
         order_by_likes (bool | Unset):  Default: True.
         cursor (None | str | Unset):
+        page (int | None | Unset):
         query (None | str | Unset):
 
     Raises:
@@ -216,6 +235,7 @@ async def asyncio(
             hours=hours,
             order_by_likes=order_by_likes,
             cursor=cursor,
+            page=page,
             query=query,
         )
     ).parsed

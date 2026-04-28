@@ -12,8 +12,8 @@ article_router = APIRouter(
 )
 
 @article_router.get("/", response_model=PagedArticlesDTO)
-def articles(hours: int = 1, order_by_likes: bool = True, cursor: str | None = Query(None), query: str | None = Query(None), user = Depends(get_current_user), article_service = Depends(get_article_service)):
-    paged_result: PagedArticles = article_service.get_articles(consumer=user, hours=hours, order_by_likes=order_by_likes, cursor = cursor, query=query)
+def articles(hours: int = 1, order_by_likes: bool = True, cursor: str | None = Query(None), page: int | None = Query(None), query: str | None = Query(None), user = Depends(get_current_user), article_service = Depends(get_article_service)):
+    paged_result: PagedArticles = article_service.get_articles(consumer=user, hours=hours, order_by_likes=order_by_likes, cursor = cursor, query=query, page=page)
     
     return PagedArticlesDTO(
         articles=[ArticleDTO(**asdict(article)) for article in paged_result.articles],

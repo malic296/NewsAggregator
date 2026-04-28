@@ -21,11 +21,13 @@ class PagedArticlesDTO:
     Attributes:
         articles (list[ArticleDTO]):
         next_cursor (None | str | Unset):
+        next_page (int | None | Unset):
         has_more (bool | Unset):  Default: False.
     """
 
     articles: list[ArticleDTO]
     next_cursor: None | str | Unset = UNSET
+    next_page: int | None | Unset = UNSET
     has_more: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -41,6 +43,12 @@ class PagedArticlesDTO:
         else:
             next_cursor = self.next_cursor
 
+        next_page: int | None | Unset
+        if isinstance(self.next_page, Unset):
+            next_page = UNSET
+        else:
+            next_page = self.next_page
+
         has_more = self.has_more
 
         field_dict: dict[str, Any] = {}
@@ -52,6 +60,8 @@ class PagedArticlesDTO:
         )
         if next_cursor is not UNSET:
             field_dict["next_cursor"] = next_cursor
+        if next_page is not UNSET:
+            field_dict["next_page"] = next_page
         if has_more is not UNSET:
             field_dict["has_more"] = has_more
 
@@ -78,11 +88,21 @@ class PagedArticlesDTO:
 
         next_cursor = _parse_next_cursor(d.pop("next_cursor", UNSET))
 
+        def _parse_next_page(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        next_page = _parse_next_page(d.pop("next_page", UNSET))
+
         has_more = d.pop("has_more", UNSET)
 
         paged_articles_dto = cls(
             articles=articles,
             next_cursor=next_cursor,
+            next_page=next_page,
             has_more=has_more,
         )
 

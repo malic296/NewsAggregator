@@ -1,5 +1,4 @@
 import json
-
 from flask import render_template, request, redirect, url_for
 from web.decorators import authorized
 from web.dependencies.services import get_services
@@ -12,11 +11,10 @@ def articles():
     services = get_services()
     filter_form = FilterForm()
 
-    hours = 1
-    order_by_likes = True
     query = None
     cursor = request.args.get("cursor", None)
     cursor = None if cursor == "None" else cursor
+    page = int(request.args.get("page", 1))
     history_raw = request.args.get("history", "[]")
 
     try:
@@ -45,34 +43,47 @@ def articles():
         hours=hours,
         order_by_likes=order_by_likes,
         query=query,
-        cursor=cursor
+        cursor=cursor,
+        page=page
     )
 
-    has_previous = cursor is not None
-    prev_page_cursor = cursor_history[-1] if cursor_history else None
-    prev_history = cursor_history[:-1] if cursor_history else []
-    next_history = cursor_history + ([cursor] if cursor is not None else [])
     base_params = {
         "hours": hours,
         "order_by_likes": str(order_by_likes).lower(),
         "query": query,
     }
-    prev_page_url = None
-    if has_previous:
-        prev_page_url = url_for(
-            "main.articles",
-            cursor=prev_page_cursor,
-            history=json.dumps(prev_history),
-            **base_params,
-        )
-    next_page_url = None
-    if result.has_more and result.next_cursor is not None:
-        next_page_url = url_for(
-            "main.articles",
-            cursor=result.next_cursor,
-            history=json.dumps(next_history),
-            **base_params,
-        )
+
+    is_search = query is not None and query.strip() != ""
+    prev_page_cursor = None
+
+    if is_search:
+        prev_page_url = url_for("main.articles", page=page - 1, **base_params) if page > 1 else None
+        next_page_url = url_for("main.articles", page=result.next_page,
+                                **base_params) if result.has_more and result.next_page else None
+        has_previous = page > 1
+    else:
+        has_previous = cursor is not None
+        prev_page_cursor = cursor_history[-1] if cursor_history else None
+        prev_history = cursor_history[:-1] if cursor_history else []
+        next_history = cursor_history + ([cursor] if cursor is not None else [])
+
+        prev_page_url = None
+        if has_previous:
+            prev_page_url = url_for(
+                "main.articles",
+                cursor=prev_page_cursor,
+                history=json.dumps(prev_history),
+                **base_params,
+            )
+
+        next_page_url = None
+        if result.has_more and result.next_cursor:
+            next_page_url = url_for(
+                "main.articles",
+                cursor=result.next_cursor,
+                history=json.dumps(next_history),
+                **base_params,
+            )
 
     return render_template(
         "main/articles.html",
