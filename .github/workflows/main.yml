@@ -42,7 +42,7 @@ jobs:
         run: docker compose build be fe
 
       - name: Start database and cache
-        run: docker compose up -d db redis
+        run: docker compose up -d db redis elasticsearch
 
       - name: Run database migrations
         run: docker compose run --rm migrate
