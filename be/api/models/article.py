@@ -14,3 +14,4 @@ class Article:
     channel_logo: Optional[str] = None
     liked_by_user: bool = False
     id: Optional[int] = None
+    embedding: Optional[list[float]] = None

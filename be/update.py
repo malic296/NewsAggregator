@@ -3,12 +3,12 @@ import asyncio
 from api.core.errors import AppError
 from api.core.settings import Settings
 from api.core.clients import create_connection_pool, create_valkey_client, create_elastic_search_client
-from api.services.channel_service import ChannelService
-from api.services.scraping_service import ScrapingService
+from api.core.utils import load_embedding_model
 from api.core.logger.handlers import DropOnFailHandler, DatabaseHandler
 from api.repositories import LoggingRepository, ChannelRepository, ElasticSearchRepository, ValkeyRepository
 import logging
 from api.core.logger import setup_logging
+from api.services import SemanticService, ScrapingService, ChannelService
 
 async def main() -> None:
     setup_logging()
@@ -16,6 +16,8 @@ async def main() -> None:
     db_pool = create_connection_pool(settings)
     es_client = create_elastic_search_client(settings)
     logging_repo = LoggingRepository(connection_pool=db_pool)
+    semantic_service = SemanticService(embedding_model=load_embedding_model())
+
     db_handler = DatabaseHandler(writer_func=logging_repo.log_to_db)
     db_wrapper = DropOnFailHandler(db_handler)
     logging.getLogger().addHandler(db_wrapper)
@@ -30,11 +32,12 @@ async def main() -> None:
                 channels=ChannelRepository(connection_pool=db_pool),
                 valkey=ValkeyRepository(create_valkey_client(settings)),
                 scraping_service=scraping_service,
-                elasticsearch=ElasticSearchRepository(es_client)
+                elasticsearch=ElasticSearchRepository(es_client),
+                semantics = semantic_service
             )
             logger.info("Dependencies loaded.")
 
-            await channel_service.update_channels(channel_urls=settings.config.feeds, hours=settings.config.update_interval)
+            await channel_service.update_data(channel_urls=settings.config.feeds, hours=settings.config.update_interval)
 
             logger.info("Channels and articles updated.")
 
