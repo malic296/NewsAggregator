@@ -54,10 +54,6 @@ services:
       dockerfile: be/Dockerfile
     image: malic466/news-be
     restart: unless-stopped
-    labels:
-      ofelia.enabled: "true"
-      ofelia.job-exec.update-news.schedule: "@every 30m"
-      ofelia.job-exec.update-news.command: "python update.py"
     env_file:
       - .env
     depends_on:
@@ -69,6 +65,24 @@ services:
         condition: service_healthy
     expose:
       - "8000"
+    volumes:
+      - modelcache:/model-cache
+
+  updater:
+    image: malic466/news-be
+    restart: unless-stopped
+    command: python update_worker.py
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - modelcache:/model-cache
 
   fe:
     build:
@@ -112,16 +126,8 @@ services:
         condition: service_healthy
     command: alembic upgrade head
 
-  scheduler:
-    image: mcuadros/ofelia:latest
-    restart: unless-stopped
-    depends_on:
-      - be
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: daemon --docker
-
 volumes:
   pgdata:
   redisdata:
   esdata:
+  modelcache:

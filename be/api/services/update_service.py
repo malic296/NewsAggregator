@@ -1,8 +1,10 @@
 import uuid
-from datetime import datetime, timezone
 from api.models import Article, ArticleSearchEntry, Theme
 
 class UpdateService:
+    EXISTING_THEME_MATCH_THRESHOLD = 75.0
+    NEW_THEME_MATCH_THRESHOLD = 80.0
+
     def __init__(self, scraping_service, themes, articles, channels, elasticsearch, semantics):
         self.scraping_service = scraping_service
         self.themes = themes
@@ -12,14 +14,12 @@ class UpdateService:
         self.semantics = semantics
 
     async def update_data(self, channel_urls: list[str], hours: int) -> None:
-        # 1. FETCH & FILTER: Get only articles not already in DB
         channels = await self.scraping_service.fetch_channels(feeds=channel_urls, hours=hours)
         new_data = self.channels.get_new_articles(channels)
 
         if not new_data:
             return
 
-        # Flatten structure and map channel IDs
         all_new_articles: list[Article] = []
         chan_id_map = {}
         for c_id, articles in new_data:
@@ -27,28 +27,23 @@ class UpdateService:
                 chan_id_map[a.channel_link] = c_id
                 all_new_articles.append(a)
 
-        # 2. SEMANTICS: Create embeddings for all new articles
         for art in all_new_articles:
             text = self.semantics.normalize_text(f"{art.title} {art.description}")
             art.embedding = self.semantics.create_embedding(text)
 
-        # 3. MATCHING: Try to link to existing themes
         existing_themes = self.themes.read_themes(72)
         for art in all_new_articles:
             for theme in existing_themes:
-                # Compare new article to the articles already in this theme
                 sims = [self.semantics.get_similarity_percentage(art.embedding, ta.embedding)
                         for ta in theme.articles]
 
-                if sims and (sum(sims) / len(sims)) > 0.75:
+                if sims and (sum(sims) / len(sims)) >= self.EXISTING_THEME_MATCH_THRESHOLD:
                     art.theme_id = theme.id
                     break
 
-        # 4. CLUSTERING: Discovery of brand new themes from remaining articles
         themeless = [a for a in all_new_articles if a.theme_id is None]
         discovered_themes = self._discover_new_themes(themeless)
 
-        # 5. PERSISTENCE: Save Themes first, then Articles
         if discovered_themes:
             uuid_map = self.themes.create_themes_bulk(discovered_themes)
             for theme in discovered_themes:
@@ -56,17 +51,14 @@ class UpdateService:
                 for art in theme.articles:
                     art.theme_id = real_db_id
 
-        # Save all articles (returning IDs for ElasticSearch)
         saved_rows = self.articles.bulk_save_articles(all_new_articles, chan_id_map)
 
-        # 6. ELASTICSEARCH: Sync the newly created records
         if saved_rows:
             search_entries = [ArticleSearchEntry(**row) for row in saved_rows]
             self.elasticsearch.save_article_entries(search_entries)
             self.elasticsearch.delete_old_articles(72)
 
     def _discover_new_themes(self, articles: list[Article]) -> list[Theme]:
-        """Group themeless articles into new Theme objects if 2+ match."""
         new_themes = []
         processed_indices = set()
 
@@ -77,17 +69,15 @@ class UpdateService:
             for j, art_b in enumerate(articles):
                 if i == j or j in processed_indices: continue
 
-                if self.semantics.get_similarity_percentage(art_a.embedding, art_b.embedding) > 0.80:
+                if self.semantics.get_similarity_percentage(art_a.embedding, art_b.embedding) >= self.NEW_THEME_MATCH_THRESHOLD:
                     cluster.append(art_b)
 
             if len(cluster) >= 2:
-                # Create a new Theme dataclass
                 new_themes.append(Theme(
                     uuid=str(uuid.uuid4()),
                     newest_date=max(a.pub_date for a in cluster),
                     articles=cluster
                 ))
-                # Mark these articles as "clustered" so they aren't used for another theme
                 for clustered_art in cluster:
                     processed_indices.add(articles.index(clustered_art))
 

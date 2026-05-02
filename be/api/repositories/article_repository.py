@@ -7,6 +7,12 @@ from api.core.errors import MappingError, DatabaseError
 from api.core.cursor import encode_cursor
 
 class ArticleRepository(BaseRepository, ArticleInterface):
+    def _serialize_embedding(self, embedding: list[float] | None) -> str | None:
+        if embedding is None:
+            return None
+
+        return "[" + ",".join(str(float(value)) for value in embedding) + "]"
+
     def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | int | None, uuid: str | None) -> PagedArticles:
         date_since = datetime.now(timezone.utc) - timedelta(hours=hours)
         inner_query = """
@@ -215,7 +221,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             c_id = channel_id_map.get(art.channel_link)
             params.append((
                 art.uuid, art.title, art.link, art.description,
-                art.pub_date, c_id, art.embedding, art.theme_id
+                art.pub_date, c_id, self._serialize_embedding(art.embedding), art.theme_id
             ))
 
         res = self._execute_transaction_returning([(sql, p) for p in params])

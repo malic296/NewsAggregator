@@ -3,6 +3,7 @@ WORKDIR /api
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV HF_HOME=/model-cache/huggingface
 
 COPY be/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
