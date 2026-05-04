@@ -41,6 +41,7 @@ async def main() -> None:
 
             await update_service.update_data(channel_urls=settings.config.feeds, hours=settings.config.update_interval)
 
+
             logger.info("Channels and articles updated.")
 
     except AppError as e:
