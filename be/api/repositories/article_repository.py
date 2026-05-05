@@ -206,17 +206,21 @@ class ArticleRepository(BaseRepository, ArticleInterface):
 
     def bulk_save_articles(self, articles: list[Article], channel_id_map: dict[str, int]) -> list[ArticleSearchEntry]:
         sql = """
-            INSERT INTO article (uuid, title, link, description, pub_date, channel_id, embedding, theme_id)
-            SELECT %s, %s, %s, %s, %s, %s, %s::vector,
-                (
-                    SELECT theme_id FROM article 
-                    WHERE theme_id IS NOT NULL
-                    AND (embedding <=> %s::vector) < 0.9
-                    ORDER BY embedding <=> %s::vector ASC LIMIT 1
-                )
-            ON CONFLICT (link) DO NOTHING
-            RETURNING id, title, description, pub_date, channel_id
-        """
+              INSERT INTO article (uuid, title, link, description, pub_date, channel_id, embedding, theme_id)
+              SELECT %s, %s, %s, %s, %s, %s, %s::vector, 
+                  (
+                      SELECT a.theme_id 
+                      FROM article AS a 
+                      WHERE a.theme_id IS NOT NULL 
+                        AND a.embedding IS NOT NULL 
+                        AND a.channel_id <> %s 
+                        AND (a.embedding <=> %s::vector) < 0.20
+                      ORDER BY a.embedding <=> %s::vector ASC
+                      LIMIT 1
+                  )
+              ON CONFLICT (link) DO NOTHING
+              RETURNING id, title, description, pub_date, channel_id 
+              """
         params = []
         for art in articles:
             c_id = channel_id_map.get(art.channel_link)
@@ -228,6 +232,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
                 art.pub_date,
                 c_id,
                 art.embedding,
+                c_id,
                 art.embedding,
                 art.embedding
             ))
@@ -245,35 +250,84 @@ class ArticleRepository(BaseRepository, ArticleInterface):
         since_date = datetime.now(timezone.utc) - timedelta(hours=hours_limit)
 
         sql = """
-            WITH pairs AS(
+            WITH RECURSIVE
+            candidates AS (
+                SELECT id, channel_id, embedding, pub_date
+                FROM article
+                WHERE theme_id IS NULL
+                  AND embedding IS NOT NULL
+                  AND pub_date > %s
+            ),
+    
+            edges AS (
                 SELECT a.id AS id1, b.id AS id2
-                FROM article AS a 
-                JOIN article AS b ON (a.embedding <=> b.embedding) < 0.9
-                WHERE 
-                    a.theme_id IS NULL 
-                    AND b.theme_id IS NULL
-                    AND a.id < b.id
-                    AND a.pub_date > %s
-                    AND b.pub_date > %s
+                FROM candidates AS a
+                JOIN candidates AS b
+                  ON a.id < b.id
+                 AND a.channel_id <> b.channel_id
+                 AND (a.embedding <=> b.embedding) < 0.20
             ),
-            new_themes_to_create AS(
-                SELECT DISTINCT ON (id1)
-                    id1, id2, gen_random_uuid()::text as new_uuid, now() as newest_date
-                FROM pairs
+                
+            undirected_edges AS (
+                SELECT id1, id2 FROM edges
+                UNION
+                SELECT id2, id1 FROM edges
             ),
+    
+            connected(seed_id, article_id) AS (
+                SELECT id, id
+                FROM candidates
+    
+                UNION
+    
+                SELECT c.seed_id, e.id2
+                FROM connected AS c
+                JOIN undirected_edges AS e ON e.id1 = c.article_id
+            ),
+                
+            article_components AS (
+                SELECT
+                    article_id,
+                    MIN(seed_id) AS component_id
+                FROM connected
+                GROUP BY article_id
+            ),
+    
+            valid_components AS (
+                SELECT component_id
+                FROM article_components
+                GROUP BY component_id
+                HAVING COUNT(*) >= 2
+            ),
+                
+            new_themes_to_create AS (
+                SELECT
+                    vc.component_id,
+                    gen_random_uuid()::text AS new_uuid,
+                    MAX(a.pub_date) AS newest_date
+                FROM valid_components AS vc
+                JOIN article_components AS ac ON ac.component_id = vc.component_id
+                JOIN article AS a ON a.id = ac.article_id
+                GROUP BY vc.component_id
+            ),
+    
             inserted_themes AS (
                 INSERT INTO theme (uuid, newest_date)
-                SELECT new_uuid, newest_date FROM new_themes_to_create
+                SELECT new_uuid, newest_date
+                FROM new_themes_to_create
                 RETURNING id, uuid
             )
-            UPDATE article
+
+            UPDATE article AS a
             SET theme_id = it.id
             FROM inserted_themes AS it
-            JOIN new_themes_to_create AS ntc ON it.uuid = ntc.new_uuid
-            WHERE article.id = ntc.id1 OR article.id = ntc.id2
+            JOIN new_themes_to_create AS ntc ON ntc.new_uuid = it.uuid
+            JOIN article_components AS ac ON ac.component_id = ntc.component_id
+            WHERE a.id = ac.article_id
+              AND a.theme_id IS NULL
         """
 
-        params = (since_date, since_date, )
+        params = (since_date, )
 
         result = self._execute(sql, params)
 
