@@ -1,24 +1,48 @@
 from datetime import datetime, timedelta, timezone
 from api.core.errors import DatabaseError
 from api.interfaces import ThemesInterface
-from api.models import Theme, Article
+from api.models import Theme, Article, PagedThemes
 from api.repositories.base_repository import BaseRepository
 
 class ThemesRepository(ThemesInterface, BaseRepository):
-    def read_themes(self, hours: int = 72) -> list[Theme]:
+    def read_themes(self, consumer_id: int, sort_value: str | None, uuid: str | None, hours: int = 72) -> list[Theme]:
         since_date = datetime.now(timezone.utc) - timedelta(hours=hours)
-        query = """
-            SELECT t.id AS theme_id, t.uuid AS theme_uuid, t.newest_date AS theme_newest_date,
-            a.id AS article_id, a.uuid as article_uuid, a.title as article_title, a.description as article_description, a.link as article_link, a.pub_date as article_pub_date, a.embedding AS article_embedding,
-            c.link as channel_link, c.logo_url as channel_logo
-            FROM theme AS t 
+        params = [since_date]
+
+        cursor_filter = "TRUE"
+        if sort_value and uuid:
+            cursor_dt = datetime.fromisoformat(sort_value) if isinstance(sort_value, str) else sort_value
+            cursor_filter = f"newest_date < %s OR (newest_date = %s AND uuid < %s)"
+            params.extend([cursor_dt, cursor_dt, uuid])
+
+        params.append(self.PAGE_SIZE + 1)
+
+        query = f"""
+            WITH target_themes AS (
+                SELECT id, uuid, newest_date
+                FROM theme
+                WHERE newest_date >= %s
+                AND {cursor_filter}
+                ORDER BY newest_date DESC, uuid DESC
+                LIMIT %s
+            )
+            SELECT 
+                t.id AS theme_id, t.uuid AS theme_uuid, t.newest_date AS theme_newest_date,
+                a.id AS article_id, a.uuid as article_uuid, a.title as article_title, a.description as article_description, a.link as article_link, a.pub_date as article_pub_date, a.embedding AS article_embedding,
+                c.link as channel_link, c.logo_url as channel_logo,
+                COUNT(l.id) OVER (PARTITION BY a.id) AS likes,
+                EXISTS(
+                    SELECT 1 FROM likes
+                    WHERE article_id = a.id AND consumer_id = %s
+                ) AS liked_by_user
+            FROM target_themes AS t 
             JOIN article AS a ON a.theme_id = t.id
             JOIN channel AS c ON c.id = a.channel_id
-            WHERE t.newest_date >= %s
-            ORDER BY t.newest_date DESC
+            LEFT JOIN likes as l ON a.id = l.article_id
+            ORDER BY t.newest_date DESC, t.uuid DESC, a.pub_date DESC
         """
 
-        result = self._execute(query=query, params=(since_date, ))
+        result = self._execute(query=query, params=tuple(params + [consumer_id]))
         if not result.success:
             raise DatabaseError(
                 message=result.error_message if result.error_message else "Unknown error",
@@ -42,7 +66,8 @@ class ThemesRepository(ThemesInterface, BaseRepository):
                     embedding=row["article_embedding"],
                     channel_logo=row["channel_logo"],
                     channel_link=row["channel_link"],
-                    likes=None
+                    likes=row["likes"],
+                    liked_by_user=row["liked_by_user"]
                 )
             )
 

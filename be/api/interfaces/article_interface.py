@@ -4,7 +4,7 @@ from api.models import Article, Consumer, PagedArticles, ArticleSearchEntry
 
 class ArticleInterface(ABC):
     @abstractmethod
-    def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | None, uuid: str | None) -> PagedArticles:
+    def read_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | None, uuid: str | None) -> PagedArticles:
         ...
 
     @abstractmethod

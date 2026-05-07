@@ -10,8 +10,8 @@ class Article:
     description: str
     pub_date: datetime
     channel_link: str
-    likes: int | None = None
-    channel_logo: Optional[str] = None
+    channel_logo: str
+    likes: int = -1
     liked_by_user: bool = False
     id: Optional[int] = None
     embedding: Optional[list[float]] = None

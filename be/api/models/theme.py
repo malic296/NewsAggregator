@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from .article import Article
 
@@ -6,5 +6,5 @@ from .article import Article
 class Theme:
     uuid: str
     newest_date: datetime
-    articles: list[Article] | None = None
+    articles: list[Article] = field(default_factory=list)
     id: int | None = None

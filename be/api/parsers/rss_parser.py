@@ -65,8 +65,8 @@ class RSSParser(FeedParser):
                     pub_date=parsed_pubdate,
                     uuid=str(uuid.uuid4()),
                     channel_link=channel_link.strip(),
-                    likes=0
-
+                    likes=0,
+                    channel_logo=f"https://s2.googleusercontent.com/s2/favicons?domain={channel_link}"
                 )
             )
 

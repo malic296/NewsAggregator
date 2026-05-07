@@ -7,7 +7,7 @@ from api.core.errors import MappingError, DatabaseError
 from api.core.cursor import encode_cursor
 
 class ArticleRepository(BaseRepository, ArticleInterface):
-    def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | int | None, uuid: str | None) -> PagedArticles:
+    def read_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | int | None, uuid: str | None) -> PagedArticles:
         date_since = datetime.now(timezone.utc) - timedelta(hours=hours)
         inner_query = """
             SELECT 
