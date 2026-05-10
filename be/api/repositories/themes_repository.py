@@ -78,8 +78,8 @@ class ThemesRepository(ThemesInterface, BaseRepository):
         since_date = datetime.now(timezone.utc) - timedelta(hours=hours)
         sql = """
             SELECT 
-                t.id AS theme_id, 
-                t.uuid AS theme_uuid, 
+                t.id AS id, 
+                t.uuid AS uuid, 
                 t.newest_date AS newest_date, 
                 t.centroid_embedding AS centroid
             FROM theme AS t
