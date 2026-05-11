@@ -127,6 +127,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
                 a.link AS link, 
                 a.pub_date as pub_date, 
                 c.link AS channel_link, 
+                c.logo_url AS channel_logo,
                 COUNT(l.id) AS likes
             FROM article AS a
             JOIN channel AS c ON c.id = a.channel_id 
