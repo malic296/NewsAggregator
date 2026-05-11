@@ -1,6 +1,7 @@
 from sentence_transformers.util import cos_sim
 from simplemma import lemmatize
 import numpy as np
+import json
 
 class SemanticService:
     def __init__(self, embedding_model):
@@ -13,7 +14,12 @@ class SemanticService:
     def create_embedding(self, text: str):
         return self.embedding_model.encode(text).tolist()
 
-    def get_similarity_percentage(self, first_embedding, second_embedding) -> float:
+    def get_similarity_percentage(self, first_embedding: list[float], second_embedding: list[float]) -> float:
+        if isinstance(first_embedding, str):
+            first_embedding = json.loads(first_embedding)
+        if isinstance(second_embedding, str):
+            second_embedding = json.loads(second_embedding)
+
         if not first_embedding or not second_embedding:
             return 0.0
 

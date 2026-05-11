@@ -101,13 +101,13 @@ class ThemesRepository(ThemesInterface, BaseRepository):
 
         insert_sql = """
             WITH inserted AS (
-                INSERT INTO article (id, uuid, title, description, link, pub_date, embedding, channel_id, theme_id)
+                INSERT INTO article (uuid, title, description, link, pub_date, embedding, channel_id, theme_id)
                 VALUES 
                 """ + ", ".join([
-                    "(%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                    "(%s, %s, %s, %s, %s, %s, %s, %s)"
                     for _ in new_themed_articles
                 ]) + """
-                RETURNING id, title, description, pub_date, channel_id, theme_id
+                RETURNING id, title, description, pub_date, channel_id, theme_id, embedding
             ),
             updated AS (
                 UPDATE theme AS t
@@ -125,7 +125,6 @@ class ThemesRepository(ThemesInterface, BaseRepository):
         params = []
         for article in new_themed_articles:
             params.extend([
-                article.id,
                 article.uuid,
                 article.title,
                 article.description,

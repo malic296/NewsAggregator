@@ -1,3 +1,4 @@
+import json
 from dataclasses import asdict
 from api.interfaces import ElasticSearchInterface, ArticleInterface, ChannelInterface, ThemesInterface
 from api.services import SemanticService
@@ -80,7 +81,10 @@ class UpdateService:
             if len(candidate.new_articles) == 1 and len(candidate.unthemed_articles) == 0:
                 unmatched.append(candidate.new_articles[0])
             else:
-                embeddings = [article.embedding for article in candidate.new_articles + candidate.unthemed_articles]
+                embeddings = [
+                    json.loads(article.embedding) if isinstance(article.embedding, str) else article.embedding
+                    for article in (candidate.new_articles + candidate.unthemed_articles)
+                ]
                 candidate.centroid = self.semantics.calculate_centroid_embedding(embeddings)
                 clusters.append(candidate)
 
