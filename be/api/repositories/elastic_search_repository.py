@@ -30,7 +30,8 @@ class ElasticSearchRepository(ElasticSearchInterface):
                         "id": entry.id,
                         "title": entry.title,
                         "description": entry.description,
-                        "pub_date": entry.pub_date.isoformat()
+                        "pub_date": entry.pub_date.isoformat(),
+                        "channel_id": entry.channel_id
                     }
 
                 }
@@ -42,7 +43,7 @@ class ElasticSearchRepository(ElasticSearchInterface):
             raise ElasticSearchError(message=str(e), method="save_article_entries")
 
 
-    def delete_old_articles(self, hours: int) -> None:
+    def delete_old_articles(self, hours: int = 72) -> None:
         breakpoint_date = (datetime.now() - timedelta(hours=hours)).isoformat()
         query = {
             "query": {

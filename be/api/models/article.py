@@ -16,6 +16,7 @@ class Article:
     id: Optional[int] = None
     embedding: Optional[list[float]] = None
     theme_id: Optional[int] = None
+    user_preference: Optional[float] = None
 
 @dataclass
 class ArticleWithChannelID(Article):

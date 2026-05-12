@@ -49,6 +49,19 @@
                     {% endif %}
                 </div>
 
+                <div class="field">
+                    <label class="label ">{{ form.invitation_code.label.text }}</label>
+                    <div class="control has-icons-left">
+                        {{ form.invitation_code(class="input is-primary is-outlined", placeholder="Invitační kod") }}
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-key"></i>
+                        </span>
+                    </div>
+                    {% if form.invitation_code.errors %}
+                        <p class="help is-danger">{{ form.invitation_code.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
                 <div class="field mt-5">
                     <div class="control">
                         <button type="submit" class="button is-primary is-outlined is-fullwidth is-uppercase">

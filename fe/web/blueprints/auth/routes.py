@@ -29,7 +29,7 @@ def register():
     services = get_services()
     form = RegistrationForm()
     if form.validate_on_submit():
-        email_sent = services.consumers.request_new_registration(RegistrationDTO(form.username.data, form.email.data, form.password.data))
+        email_sent = services.consumers.request_new_registration(RegistrationDTO(form.username.data, form.email.data, form.password.data, int(form.invitation_code.data)))
         if email_sent:
             session["pending_email"] = form.email.data
             return redirect(url_for('auth.verify'))

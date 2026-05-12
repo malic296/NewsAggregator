@@ -1,3 +1,4 @@
+from random import randint
 from typing import Optional
 from api.models import Channel, Article
 from api.core.errors import MappingError
@@ -100,4 +101,19 @@ class ValkeyRepository(ValkeyInterface):
     def set_expiration(self, key: str, seconds: int):
         self._client.expire(key, seconds)
 
+    def generate_invite_code(self, consumer_id: int) -> int:
+        key = f"invite_code:{consumer_id}"
 
+        code = self._client.get(key)
+        if not code:
+            code = randint(100000, 999999)
+            self._client.setex(key, 1800, code)
+
+        return code
+
+    def validate_invite_code(self, code: int) -> bool:
+        for key in self._client.scan_iter("invite_code:*"):
+            cached_value = self._client.get(key)
+            if cached_value and int(cached_value) == code:
+                return True
+        return False

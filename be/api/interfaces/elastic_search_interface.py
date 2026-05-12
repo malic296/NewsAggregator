@@ -7,7 +7,7 @@ class ElasticSearchInterface(ABC):
         ...
 
     @abstractmethod
-    def delete_old_articles(self, hours: int) -> None:
+    def delete_old_articles(self, hours: int = 72) -> None:
         ...
 
     @abstractmethod

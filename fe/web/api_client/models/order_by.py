@@ -6,42 +6,29 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="RegistrationDTO")
+from ..models.order_by_enum import OrderByEnum
+
+T = TypeVar("T", bound="OrderBy")
 
 
 @_attrs_define
-class RegistrationDTO:
+class OrderBy:
     """
     Attributes:
-        username (str):
-        email (str):
-        password (str):
-        invite_code (int):
+        field (OrderByEnum):
     """
 
-    username: str
-    email: str
-    password: str
-    invite_code: int
+    field: OrderByEnum
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        username = self.username
-
-        email = self.email
-
-        password = self.password
-
-        invite_code = self.invite_code
+        field = self.field.value
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "username": username,
-                "email": email,
-                "password": password,
-                "invite_code": invite_code,
+                "field": field,
             }
         )
 
@@ -50,23 +37,14 @@ class RegistrationDTO:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        username = d.pop("username")
+        field = OrderByEnum(d.pop("field"))
 
-        email = d.pop("email")
-
-        password = d.pop("password")
-
-        invite_code = d.pop("invite_code")
-
-        registration_dto = cls(
-            username=username,
-            email=email,
-            password=password,
-            invite_code=invite_code,
+        order_by = cls(
+            field=field,
         )
 
-        registration_dto.additional_properties = d
-        return registration_dto
+        order_by.additional_properties = d
+        return order_by
 
     @property
     def additional_keys(self) -> list[str]:

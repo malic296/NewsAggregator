@@ -6,42 +6,37 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="RegistrationDTO")
+T = TypeVar("T", bound="InvitationCodeResponse")
 
 
 @_attrs_define
-class RegistrationDTO:
+class InvitationCodeResponse:
     """
     Attributes:
-        username (str):
-        email (str):
-        password (str):
-        invite_code (int):
+        success (bool):
+        message (str):
+        code (int):
     """
 
-    username: str
-    email: str
-    password: str
-    invite_code: int
+    success: bool
+    message: str
+    code: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        username = self.username
+        success = self.success
 
-        email = self.email
+        message = self.message
 
-        password = self.password
-
-        invite_code = self.invite_code
+        code = self.code
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "username": username,
-                "email": email,
-                "password": password,
-                "invite_code": invite_code,
+                "success": success,
+                "message": message,
+                "code": code,
             }
         )
 
@@ -50,23 +45,20 @@ class RegistrationDTO:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        username = d.pop("username")
+        success = d.pop("success")
 
-        email = d.pop("email")
+        message = d.pop("message")
 
-        password = d.pop("password")
+        code = d.pop("code")
 
-        invite_code = d.pop("invite_code")
-
-        registration_dto = cls(
-            username=username,
-            email=email,
-            password=password,
-            invite_code=invite_code,
+        invitation_code_response = cls(
+            success=success,
+            message=message,
+            code=code,
         )
 
-        registration_dto.additional_properties = d
-        return registration_dto
+        invitation_code_response.additional_properties = d
+        return invitation_code_response
 
     @property
     def additional_keys(self) -> list[str]:

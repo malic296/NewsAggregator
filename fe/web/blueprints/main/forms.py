@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, SubmitField, StringField, SelectField
 from wtforms.validators import DataRequired, NumberRange, Length, Optional
+from web.api_client.models import OrderByEnum
 
 class FilterForm(FlaskForm):
     hours = IntegerField(
@@ -12,9 +13,13 @@ class FilterForm(FlaskForm):
         ]
     )
 
-    order_by_likes = SelectField(
+    order_by = SelectField(
         "Seřadit podle",
-        choices=[("true", "Počet Liků"), ("false", "Nejnovější")],
+        choices=[
+            (OrderByEnum.LIKES.value, "Počet Liků"),
+            (OrderByEnum.TIMESTAMP.value, "Nejnovější"),
+            (OrderByEnum.PREFERENCES.value, "Preference")
+        ],
         default="true"
     )
 

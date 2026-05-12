@@ -5,9 +5,10 @@ from datetime import datetime, timezone, timedelta
 from api.models import Consumer, Article, PagedArticles, ArticleSearchEntry, ArticleWithChannelID
 from api.core.errors import MappingError, DatabaseError
 from api.core.cursor import encode_cursor
+from api.models.enums import OrderByEnum
 
 class ArticleRepository(BaseRepository, ArticleInterface):
-    def read_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | int | None, uuid: str | None) -> PagedArticles:
+    def read_articles(self, consumer: Consumer, hours: int, order_by: OrderByEnum, sort_value: str | int | None, uuid: str | None) -> PagedArticles:
         date_since = datetime.now(timezone.utc) - timedelta(hours=hours)
         inner_query = """
             SELECT 
@@ -18,7 +19,11 @@ class ArticleRepository(BaseRepository, ArticleInterface):
                 EXISTS(
                     SELECT 1 FROM likes
                     WHERE article_id = a.id AND consumer_id = %s
-                ) AS liked_by_user
+                ) AS liked_by_user,
+                COALESCE(
+                    1 - (a.embedding <=> (SELECT interest FROM consumer WHERE id = %s)),
+                    0
+                ) AS user_preference
             FROM article AS a 
             JOIN channel AS c on c.id = a.channel_id
             LEFT JOIN likes as l ON a.id = l.article_id
@@ -26,24 +31,27 @@ class ArticleRepository(BaseRepository, ArticleInterface):
                 AND a.channel_id NOT IN (
                     SELECT channel_id from disabled WHERE consumer_id = %s
                 )
-            GROUP BY a.id, c.link, c.logo_url
+            GROUP BY a.id, c.link, c.logo_url, a.embedding
         """
 
-        params = [consumer.id, date_since, consumer.id]
+        params = [consumer.id, consumer.id, date_since, consumer.id]
 
         cursor_filter = ""
         if sort_value is not None and uuid is not None:
-            if order_by_likes:
+            if order_by == OrderByEnum.LIKES:
                 cursor_filter = """
                     WHERE (likes < %s OR (likes = %s AND uuid < %s))
                 """
                 params.extend([sort_value, sort_value, uuid])
+            elif order_by == OrderByEnum.PREFERENCES:
+                cursor_filter = "WHERE (user_preference < %s OR (user_preference = %s AND uuid < %s))"
+                params.extend([float(sort_value), float(sort_value), uuid])
             else:
                 cursor_dt = datetime.fromisoformat(sort_value) if isinstance(sort_value, str) else sort_value
                 cursor_filter = "WHERE (pub_date < %s OR (pub_date = %s AND uuid < %s))"
                 params.extend([cursor_dt, cursor_dt, uuid])
 
-        order = "ORDER BY likes DESC, uuid DESC" if order_by_likes else "ORDER BY pub_date DESC, uuid DESC"
+        order = "ORDER BY likes DESC, uuid DESC" if order_by == OrderByEnum.LIKES else "ORDER BY user_preference DESC, uuid DESC" if order_by == OrderByEnum.PREFERENCES else "ORDER BY pub_date DESC, uuid DESC"
         params.append(self.PAGE_SIZE + 1)
 
         query = f"""
@@ -69,7 +77,12 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             next_cursor = None
             if has_more:
                 last = articles[-1]
-                sort_val = last.likes if order_by_likes else last.pub_date.replace(tzinfo=None)
+                if order_by == OrderByEnum.LIKES:
+                    sort_val = last.likes
+                elif order_by == OrderByEnum.PREFERENCES:
+                    sort_val = last.user_preference
+                else:
+                    sort_val = last.pub_date.replace(tzinfo=None)
                 next_cursor = encode_cursor(sort_value=sort_val, uuid=last.uuid)
 
             return PagedArticles(
@@ -203,6 +216,23 @@ class ArticleRepository(BaseRepository, ArticleInterface):
                 method="like_article"
             )
 
+        update_preferences_sql = """
+            UPDATE consumer SET interest = (
+                SELECT avg(a.embedding) FROM article AS a 
+                JOIN likes AS l ON a.id = l.article_id 
+                WHERE l.consumer_id = %s
+            )
+            WHERE id = %s
+        """
+        params = (consumer_id, consumer_id,)
+
+        result = self._execute(update_preferences_sql, params)
+        if not result.success:
+            raise DatabaseError(
+                message=result.error_message if result.error_message else "Unknown error",
+                method="like_article"
+            )
+
         return liked
 
     def get_unthemed_articles(self, hours: int) -> list[Article]:
@@ -264,3 +294,20 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             )
 
         return [ArticleSearchEntry(**row) for row in result.data] if result.data else []
+
+    def delete_old_articles(self, hours: int = 96) -> None:
+        limit_date = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+        sql = """
+            DELETE FROM article WHERE pub_date < %s
+        """
+
+        params = (limit_date, )
+
+        result = self._execute(sql, params)
+
+        if not result.success:
+            raise DatabaseError(
+                message=result.error_message if result.error_message else "Unknown error",
+                method="delete_old_articles"
+            )

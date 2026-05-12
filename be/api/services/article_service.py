@@ -1,10 +1,12 @@
 import logging
-from api.models import Consumer, Article, Channel
+from api.models import Consumer, Article
 from api.interfaces import ArticleInterface, ElasticSearchInterface, ChannelInterface
 from api.core.errors import ArticleNotFoundError
 from api.core.cursor import decode_cursor
 from api.interfaces import ValkeyInterface
-from api.models import PagedArticles, Channel
+from api.models import PagedArticles
+from api.models.enums import OrderByEnum
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ class ArticleService:
         self.valkey = valkey
         self.elasticsearch = elasticsearch
 
-    def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, cursor: str | None, page: int = 1, query: str | None = None) -> PagedArticles:
+    def get_articles(self, consumer: Consumer, hours: int, order_by: OrderByEnum, cursor: str | None, page: int = 1, query: str | None = None) -> PagedArticles:
         if hours > 72 or hours < 1:
             raise Exception("Hours must be <= 1 and 72 <=")
 
@@ -37,7 +39,7 @@ class ArticleService:
         return self.articles.read_articles(
             consumer=consumer,
             hours=hours,
-            order_by_likes=order_by_likes,
+            order_by=order_by,
             sort_value=sort_value,
             uuid=uuid
         )

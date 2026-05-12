@@ -14,6 +14,49 @@
                     <p><strong>Přihlašovací jméno:</strong> {{ user.username }}</p>
                     <p><strong>Emailová adresa:</strong> {{ user.email }}</p>
                 </div>
+
+                <div class="box">
+                    <h3 class="subtitle is-5">Pozvánka pro rodinu</h3>
+                    <p class="is-size-7 has-text-grey mb-3">
+                        Vygenerujte jednorázový přístupový kód. Kód bude platný následujících 30 minut.
+                    </p>
+
+                    <form method="POST" action="{{ url_for('user.profile') }}">
+                        {{ invite_form.hidden_tag() }}
+                        <input type="hidden" name="submit_invite" value="1">
+
+                        {% if invite_code %}
+                            <div class="field">
+                                <label class="label is-small">Váš jednorázový kód:</label>
+                                <div class="field has-addons is-flex is-align-items-stretch">
+                                    <div class="control is-expanded is-flex">
+                                        <input class="input is-primary has-text-weight-bold has-text-centered is-size-5"
+                                               type="text"
+                                               value="{{ invite_code }}"
+                                               readonly
+                                               id="inviteCodeInput"
+                                               style="height: auto; box-shadow: none;">
+                                    </div>
+                                    <div class="control is-flex">
+                                        <button type="button"
+                                                class="button is-primary"
+                                                style="height: 100%;"
+                                                onclick="navigator.clipboard.writeText('{{ invite_code }}'); alert('Kód zkopírován do schránky!');">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="button is-static is-fullwidth mt-2" disabled>
+                                Kód je aktivní
+                            </button>
+                        {% else %}
+                            <button type="submit" class="button is-info is-fullwidth">
+                                <strong>Vygenerovat kód</strong>
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
             </div>
 
             <div class="column is-8">
@@ -21,6 +64,7 @@
                     <h3 class="subtitle is-5">Aktualizovat přihlašovací údaje</h3>
                     <form method="POST" action="{{ url_for('user.profile') }}">
                         {{ form.hidden_tag() }}
+                        <input type="hidden" name="submit_credentials" value="1">
 
                         <div class="field">
                             <label class="label">Momentální heslo <span class="has-text-danger">*</span></label>

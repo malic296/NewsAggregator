@@ -47,3 +47,11 @@ class ValkeyInterface(ABC):
     @abstractmethod
     def set_expiration(self, key: str, seconds: int):
         ...
+
+    @abstractmethod
+    def generate_invite_code(self, consumer_id: int) -> int:
+        ...
+
+    @abstractmethod
+    def validate_invite_code(self, code: int) -> bool:
+        ...

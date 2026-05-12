@@ -1,6 +1,6 @@
 from web.api_client.client import AuthenticatedClient
 from web.api_client.api.articles import articles, article, like
-from web.api_client.models import PagedArticlesDTO, ArticleDTO
+from web.api_client.models import PagedArticlesDTO, ArticleDTO, OrderBy, OrderByEnum
 from typing import Optional
 from .base_service import BaseService
 
@@ -8,14 +8,15 @@ class ArticlesService(BaseService):
     def __init__(self, client: AuthenticatedClient):
         self.client = client
 
-    def read_articles(self, hours: int = 1, order_by_likes: bool = True, cursor: Optional[str] = None, page: Optional[int] = None, query: Optional[str] = None) -> PagedArticlesDTO:
+    def read_articles(self, order_by: OrderBy, hours: int = 1, cursor: Optional[str] = None, page: Optional[int] = None, query: Optional[str] = None) -> PagedArticlesDTO:
         response = articles.sync_detailed(
             client=self.client,
+            body=order_by,
             hours=hours,
-            order_by_likes=order_by_likes,
             cursor=cursor,
             query=query,
             page=page
+
         )
 
         self._handle_response(response)

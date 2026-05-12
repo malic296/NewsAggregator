@@ -4,6 +4,7 @@ from web.decorators import authorized
 from web.dependencies.services import get_services
 from . import main
 from .forms import FilterForm, ChannelFilterForm, ThemesFilterForm
+from web.api_client.models import OrderByEnum, OrderBy
 
 @main.route("/articles", methods=["GET", "POST"])
 @authorized
@@ -11,7 +12,6 @@ def articles():
     services = get_services()
     filter_form = FilterForm()
 
-    query = None
     cursor = request.args.get("cursor", None)
     cursor = None if cursor == "None" else cursor
     page = int(request.args.get("page", 1))
@@ -25,23 +25,21 @@ def articles():
         cursor_history = []
 
     if filter_form.validate_on_submit():
-        try:
-            hours = int(filter_form.hours.data)
-        except Exception:
-            hours = 1
-        order_by_likes = filter_form.order_by_likes.data == "true"
+        hours = int(filter_form.hours.data) if filter_form.hours.data else 1
+        raw_val = filter_form.order_by.data
+        selected_enum = OrderByEnum.LIKES if raw_val == OrderByEnum.LIKES.value else OrderByEnum.PREFERENCES if raw_val == OrderByEnum.PREFERENCES.value else OrderByEnum.TIMESTAMP
+
+        order_by = OrderBy(field=selected_enum)
         query = filter_form.query.data or None
     else:
-        try:
-            hours = int(request.args.get("hours", 1))
-        except Exception:
-            hours = 1
-        order_by_likes = request.args.get("order_by_likes", "true") == "true"
+        hours = int(request.args.get("hours", 1))
+        order_by_str = request.args.get("order_by", "timestamp")
+        order_by = OrderBy(field=(OrderByEnum.LIKES if order_by_str == "likes" else OrderByEnum.PREFERENCES if order_by_str == "preferences" else OrderByEnum.TIMESTAMP))
         query = request.args.get("query", None)
 
     result = services.articles.read_articles(
+        order_by=order_by,
         hours=hours,
-        order_by_likes=order_by_likes,
         query=query,
         cursor=cursor,
         page=page
@@ -49,7 +47,7 @@ def articles():
 
     base_params = {
         "hours": hours,
-        "order_by_likes": str(order_by_likes).lower(),
+        "order_by": order_by.field,
         "query": query,
     }
 
@@ -85,6 +83,11 @@ def articles():
                 **base_params,
             )
 
+    if request.method == "GET":
+        filter_form.order_by.data = order_by.field
+        filter_form.hours.data = str(hours)
+        filter_form.query.data = query
+
     return render_template(
         "main/articles.html",
         articles=result.articles if result.articles else [],
@@ -97,7 +100,7 @@ def articles():
         prev_cursor = prev_page_cursor,
         prev_page_url = prev_page_url,
         next_page_url = next_page_url,
-        current_order_by_likes=str(order_by_likes).lower(),
+        current_order_by=order_by,
         current_query=query
     )
 

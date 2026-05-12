@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo, Length
 
 class CredentialsForm(FlaskForm):
@@ -13,3 +13,6 @@ class CredentialsForm(FlaskForm):
             Length(min=5, max=50, message="Heslo musí mít 5 až 50 znaků.")
         ]
     )
+
+class GenerateInviteForm(FlaskForm):
+    submit = SubmitField("Vygenerovat kód")

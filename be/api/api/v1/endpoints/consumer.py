@@ -3,8 +3,9 @@ from api.api.dependencies import get_consumer_service, get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
 from api.models import Consumer
 from api.schemas import RegistrationDTO, ConsumerDTO, UpdateCredentialsDTO
-from api.schemas.responses import ConsumerResponse, BaseResponse, TokenResponse
+from api.schemas.responses import ConsumerResponse, BaseResponse, TokenResponse, InvitationCodeResponse
 from dataclasses import asdict
+from api.core.errors import InvalidInvitationCode
 
 consumer_router = APIRouter(
     prefix="/consumers",
@@ -13,11 +14,14 @@ consumer_router = APIRouter(
 
 @consumer_router.post("/register", response_model=BaseResponse)
 def register(registration: RegistrationDTO, consumer_service = Depends(get_consumer_service)):
-    consumer_service.request_registration(registration)
-    return BaseResponse(
-        success=True,
-        message="New pending registration created."
-    )
+    if consumer_service.validate_provided_invitation_code(registration.invite_code):
+        consumer_service.request_registration(registration)
+        return BaseResponse(
+            success=True,
+            message="New pending registration created."
+        )
+    else:
+        raise InvalidInvitationCode()
 
 @consumer_router.post("/verification", response_model=TokenResponse)
 def verification(email: str, code: int, consumer_service = Depends(get_consumer_service)):
@@ -50,6 +54,17 @@ def credentials(request: UpdateCredentialsDTO, user: Consumer = Depends(get_curr
         access_token=token,
         token_type="Bearer"
     )
+
+@consumer_router.get("/invitation_code", response_model=InvitationCodeResponse)
+def invitation_code(user: Consumer = Depends(get_current_user), consumer_service = Depends(get_consumer_service)):
+    code = consumer_service.generate_code(consumer_id=user.id)
+    return InvitationCodeResponse(
+        success=True,
+        message="Invitation code generated.",
+        code=code
+    )
+
+
 
 
 

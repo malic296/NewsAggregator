@@ -10,6 +10,13 @@ class AppError(Exception):
 class CLIError(Exception):
     pass
 
+class InvalidInvitationCode(AppError):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            public_message="Registrations are only available to closed group of people and not public."
+        )
+
 class AuthenticationRequiredError(AppError):
     def __init__(self):
         super().__init__(

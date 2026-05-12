@@ -1,5 +1,5 @@
 from web.api_client.client import AuthenticatedClient, Client
-from web.api_client.api.consumers import login, register, verification, me, credentials
+from web.api_client.api.consumers import login, register, verification, me, credentials, invitation_code
 from web.api_client.models import BodyLogin, RegistrationDTO, TokenResponse, ConsumerDTO, UpdateCredentialsDTO
 from typing import Optional
 from .base_service import BaseService
@@ -81,3 +81,14 @@ class ConsumersService(BaseService):
         except KeyError:
             return None
 
+    def generate_code(self) -> int:
+        if not isinstance(self.client, AuthenticatedClient):
+            raise Exception('This method can be called only with authenticated client.')
+
+        response = invitation_code.sync_detailed(
+            client=self.client
+        )
+
+        self._handle_response(response)
+
+        return response.parsed.code

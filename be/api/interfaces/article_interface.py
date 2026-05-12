@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from api.models import Article, Consumer, PagedArticles, ArticleSearchEntry, ArticleWithChannelID
+from api.models.enums import OrderByEnum
 
 class ArticleInterface(ABC):
     @abstractmethod
-    def read_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | None, uuid: str | None) -> PagedArticles:
+    def read_articles(self, consumer: Consumer, hours: int, order_by: OrderByEnum, sort_value: str | None, uuid: str | None) -> PagedArticles:
         ...
 
     @abstractmethod
@@ -29,4 +30,8 @@ class ArticleInterface(ABC):
 
     @abstractmethod
     def save_articles_unthemed(self, articles: list[ArticleWithChannelID]) -> list[ArticleSearchEntry]:
+        ...
+
+    @abstractmethod
+    def delete_old_articles(self, hours: int = 96) -> None:
         ...

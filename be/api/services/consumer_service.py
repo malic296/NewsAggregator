@@ -114,3 +114,9 @@ class ConsumerService:
 
         updated_consumer = self.update_credentials(request, user)
         return self.security.create_access_token(updated_consumer)
+
+    def validate_provided_invitation_code(self, code: int) -> bool:
+        return self.valkey.validate_invite_code(code=code)
+
+    def generate_code(self, consumer_id: int) -> int:
+        return self.valkey.generate_invite_code(consumer_id=consumer_id)
